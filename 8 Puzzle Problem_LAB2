@@ -1,0 +1,133 @@
+import numpy as np
+import heapq 
+import copy
+
+
+
+class stateClass(object):
+    __slots__ = ['_state','n','actual_position','depth']
+    def __init__(self,state=None,n=None,depth=None):
+        self.actual_position = {}
+        self._state = state
+        self.n = n
+        self.depth = depth
+        for i in range(0, (n ** 2)):
+            self.actual_position[i] = ((i// n) , (i % n))
+    
+    def h1(self):
+        count=0
+        for i in range(1,(self.n**2)):
+            if(np.where(self._state==i)!=self.actual_position[i]):
+                count+=1
+        return count
+    
+    def h2(self):
+        count = 0
+        sequence = self._state
+        for i in range(self.n):
+            for j in range(self.n):
+                if sequence[i][j] != 0:
+                    actual_loc = self.actual_position[sequence[i][j]]
+                    count = count +  (abs(actual_loc[0] - i)  + abs(actual_loc[1] - j))
+            
+        return count
+    def __str__(self):
+        return '\nState:\n' + str(self._state) + '\nDepth: ' + str(self.depth)
+
+    def __lt__(self,other):
+        return self.h2() < other.h2()
+    
+    def __gt__(self,other):
+        return self.h2() > other.h2()
+    
+    def __eq__(self,other):
+        for i in range(self.n):
+            for j in range(self.n):
+                if self._state[i][j] != other._state[i][j]:
+                    return False
+        return True
+
+        
+        
+        
+        
+    def find_space(self):
+	    for i in range(self.n):
+	        for j in range(self.n):
+	            if self._state[i][j] == 0:
+	                return i,j
+        
+    def generate_states(self):
+        sequence = self._state
+        space_i , space_j=self.find_space()
+        for row_add,col_add in [(-1,0),(1,0),(0,1),(0,-1)]:
+            temp_sequence = copy.deepcopy(sequence)
+            if space_i + row_add >= 0 and space_i + row_add < self.n and space_j + col_add >= 0 and space_j + col_add < self.n:
+                temp_sequence[space_i][space_j],temp_sequence[space_i + row_add][space_j + col_add]= temp_sequence[space_i + row_add][space_j + col_add],temp_sequence[space_i][space_j]
+                yield stateClass(temp_sequence,self.n,self.depth + 1)
+	    
+	    
+
+        
+        
+        
+        
+def isGoal(state):
+    for i in range(3):
+        for j in range(3):
+            x = state.actual_position[state._state[i][j]]
+            if(x[0]!=i or x[1]!=j):
+                return False
+    return True       
+        
+
+def Best_first(input_state,n):
+    
+    
+    
+
+    visited = []
+    solution_seq = []
+   
+    def solve_recursion(state):
+        List = []
+        heapq.heapify(List)
+    
+        if isGoal(state):
+            print('\nGoal state reached!\n No of steps: ',  (state.depth))
+            return True
+        
+        if state in visited:
+            return False
+        visited.append(state)
+        
+        for child in state.generate_states():
+            if child not in visited:
+                heapq.heappush(List,child)
+                
+        while len(List):
+            next_state = heapq.heappop(List)
+            print(next_state, next_state.h2())
+            if solve_recursion(next_state):
+                solution_seq.insert(0,next_state)
+                return True
+        return False
+    
+    solve_recursion(input_state)
+    solution_seq.insert(0,input_state)
+    for steps in solution_seq:
+        print(steps)
+N = int(input())
+
+l = []
+
+for i in range(N):
+    l.append(list(map(int,input().split(' '))))
+
+
+
+input_array = np.array(l)
+input_state = stateClass(state = input_array, n = N, depth = 0)
+
+
+Best_first(input_state, N)
